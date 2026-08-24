@@ -57,6 +57,27 @@ public class IAccountManagerProxy extends BinderInvocationStub {
         return super.invoke(proxy, method, args);
     }
 
+    @ProxyMethod("getAccounts")
+    public static class getAccounts extends MethodHook {
+
+        @Override
+        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
+            return BAccountManager.get().getAccounts();
+        }
+    }
+
+    @ProxyMethod("getAccountsByType")
+    public static class getAccountsByType extends MethodHook {
+
+        @Override
+        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
+            if (args != null && args.length > 0 && args[0] instanceof String) {
+                return BAccountManager.get().getAccountsByType((String) args[0]);
+            }
+            return new Account[0];
+        }
+    }
+
     @ProxyMethod("getPassword")
     public static class getPassword extends MethodHook {
 
