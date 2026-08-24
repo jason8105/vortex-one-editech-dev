@@ -71,12 +71,13 @@ class SettingsActivity : AppCompatActivity() {
             false
         }
 
-        if (!isInstalled) {
+        if (isInstalled == false) {
             Toast.makeText(this, "Please install GMS / microG first", Toast.LENGTH_SHORT).show()
             return
         }
 
         try {
+            // Attempt 1: microG Login Activity
             val microGIntent = android.content.Intent().apply {
                 component = android.content.ComponentName(
                     "com.google.android.gms",
@@ -84,9 +85,10 @@ class SettingsActivity : AppCompatActivity() {
                 )
                 flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
             }
-
-            val started = BlackBoxCore.get().startActivity(microGIntent, USER_ID)
-            if (!started) {
+            BlackBoxCore.get().startActivity(microGIntent, USER_ID)
+        } catch (e: Exception) {
+            try {
+                // Attempt 2: Official GMS Add Account Activity
                 val gmsIntent = android.content.Intent().apply {
                     component = android.content.ComponentName(
                         "com.google.android.gms",
@@ -94,13 +96,11 @@ class SettingsActivity : AppCompatActivity() {
                     )
                     flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
                 }
-                val gmsStarted = BlackBoxCore.get().startActivity(gmsIntent, USER_ID)
-                if (!gmsStarted) {
-                    BlackBoxCore.get().launchApk("com.google.android.gms", USER_ID)
-                }
+                BlackBoxCore.get().startActivity(gmsIntent, USER_ID)
+            } catch (e2: Exception) {
+                // Attempt 3: General Play Services Settings entry
+                BlackBoxCore.get().launchApk("com.google.android.gms", USER_ID)
             }
-        } catch (e: Exception) {
-            Toast.makeText(this, "Unable to launch sign-in: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
