@@ -59,49 +59,6 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnToggleGms.setOnClickListener {
             handleToggleGms()
         }
-        binding.btnGoogleSignIn.setOnClickListener {
-            handleGoogleSignIn()
-        }
-    }
-
-    private fun handleGoogleSignIn() {
-        val isInstalled = try {
-            BlackBoxCore.get().isInstalled("com.google.android.gms", USER_ID)
-        } catch (e: Exception) {
-            false
-        }
-
-        if (!isInstalled) {
-            Toast.makeText(this, "Please install GMS / microG first", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        try {
-            val microGIntent = android.content.Intent().apply {
-                component = android.content.ComponentName(
-                    "com.google.android.gms",
-                    "org.microg.gms.auth.login.LoginActivity"
-                )
-                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-
-            val started = BlackBoxCore.get().startActivity(microGIntent, USER_ID)
-            if (!started) {
-                val gmsIntent = android.content.Intent().apply {
-                    component = android.content.ComponentName(
-                        "com.google.android.gms",
-                        "com.google.android.gms.auth.uiflows.AddAccountActivity"
-                    )
-                    flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                val gmsStarted = BlackBoxCore.get().startActivity(gmsIntent, USER_ID)
-                if (!gmsStarted) {
-                    BlackBoxCore.get().launchApk("com.google.android.gms", USER_ID)
-                }
-            }
-        } catch (e: Exception) {
-            Toast.makeText(this, "Unable to launch sign-in: ${e.message}", Toast.LENGTH_LONG).show()
-        }
     }
 
     private fun refreshGmsStatus() {
