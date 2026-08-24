@@ -29,15 +29,22 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Build 64-bit Debug APK
+      - name: Build 64-bit Debug APK Only
         run: ./gradlew :app:assembleDebug -Pandroid.injected.build.abi=arm64-v8a --stacktrace
 
-      - name: List Generated APKs
-        run: find app/build/outputs/apk -type f -name "*.apk"
+      - name: Locate and Stage APK
+        run: |
+          mkdir -p output
+          APK_FILE=$(find . -type f -name "*.apk" ! -name "*unaligned*" | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            echo "No APK found!" && exit 1
+          fi
+          echo "Found APK at: $APK_FILE"
+          cp "$APK_FILE" output/app-arm64-v8a-debug.apk
 
       - name: Upload 64-bit Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: app-arm64-v8a-debug
-          path: app/build/outputs/apk/debug/*.apk
+          path: output/app-arm64-v8a-debug.apk
           if-no-files-found: error
