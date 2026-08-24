@@ -260,6 +260,7 @@
                         android:nextFocusDown="@id/btnGoogleSignIn"
                         android:nextFocusRight="@id/rvSettingsApps" />
 
+                    <!-- Manual Google Sign-In Trigger -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnGoogleSignIn"
                         android:layout_width="match_parent"
@@ -355,7 +356,7 @@
                         app:iconPadding="6dp"
                         app:iconGravity="textStart"
                         app:iconTint="#38BDF8"
-                        android:nextFocusUp="@id/btnToggleGms"
+                        android:nextFocusUp="@id/btnGoogleSignIn"
                         android:nextFocusRight="@id/rvSettingsApps" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
