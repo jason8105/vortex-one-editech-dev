@@ -120,47 +120,6 @@ class MainActivity : AppCompatActivity() {
         binding.btnLanguage.setOnClickListener {
             showLanguagePicker()
         }
-
-        binding.btnGoogleSignIn.setOnClickListener {
-            handleGoogleSignIn()
-        }
-    }
-
-    private fun handleGoogleSignIn() {
-        val isInstalled = try {
-            BlackBoxCore.get().isInstalled("com.google.android.gms", USER_ID)
-        } catch (e: Exception) {
-            false
-        }
-
-        if (isInstalled == false) {
-            Toast.makeText(this, "Please install GMS / microG first in Settings", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        try {
-            val microGIntent = android.content.Intent().apply {
-                component = android.content.ComponentName(
-                    "com.google.android.gms",
-                    "org.microg.gms.auth.login.LoginActivity"
-                )
-                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            BlackBoxCore.get().startActivity(microGIntent, USER_ID)
-        } catch (e: Exception) {
-            try {
-                val gmsIntent = android.content.Intent().apply {
-                    component = android.content.ComponentName(
-                        "com.google.android.gms",
-                        "com.google.android.gms.auth.uiflows.AddAccountActivity"
-                    )
-                    flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                BlackBoxCore.get().startActivity(gmsIntent, USER_ID)
-            } catch (e2: Exception) {
-                BlackBoxCore.get().launchApk("com.google.android.gms", USER_ID)
-            }
-        }
     }
 
     private fun openSettingsActivity() {
