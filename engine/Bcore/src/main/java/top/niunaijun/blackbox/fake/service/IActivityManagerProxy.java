@@ -572,10 +572,6 @@ public class IActivityManagerProxy extends ClassInvocationStub {
     public static class GetIntentSenderWithFeature extends GetIntentSender {
     }
 
-    @ProxyMethod("broadcastIntentWithFeature")
-    public static class BroadcastIntentWithFeature extends BroadcastIntent {
-    }
-
     @ProxyMethod("broadcastIntent")
     public static class BroadcastIntent extends MethodHook {
         @Override
