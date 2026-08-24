@@ -580,48 +580,33 @@ public class IActivityManagerProxy extends ClassInvocationStub {
     public static class BroadcastIntent extends MethodHook {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            if (args != null) {
-                for (int i = 0; i < args.length; i++) {
-                    if (args[i] instanceof Integer && ((Integer) args[i]) == -1) {
-                        args[i] = 0; // Remap USER_ALL (-1) to host user (0)
-                    }
+            int intentIndex = getIntentIndex(args);
+            Intent intent = (Intent) args[intentIndex];
+            String resolvedType = (String) args[intentIndex + 1];
+            Intent proxyIntent = BlackBoxCore.getBActivityManager().sendBroadcast(intent, resolvedType, BActivityThread.getUserId());
+            if (proxyIntent != null) {
+                proxyIntent.setExtrasClassLoader(BActivityThread.getApplication().getClassLoader());
+                ProxyBroadcastRecord.saveStub(proxyIntent, intent, BActivityThread.getUserId());
+                args[intentIndex] = proxyIntent;
+            }
+            // ignore permission
+            for (int i = 0; i < args.length; i++) {
+                Object o = args[i];
+                if (o instanceof String[]) {
+                    args[i] = null;
                 }
             }
-            try {
-                return method.invoke(who, args);
-            } catch (Throwable t) {
-                Throwable cause = t instanceof java.lang.reflect.InvocationTargetException ? 
-                        ((java.lang.reflect.InvocationTargetException) t).getTargetException() : t;
-                if (cause instanceof SecurityException) {
-                    // Suppress remaining cross-user broadcast permission denials
-                    return 0;
-                }
-                throw cause;
-            }
+            return method.invoke(who, args);
         }
-    }
 
-    @ProxyMethod("broadcastIntentWithFeature")
-    public static class BroadcastIntentWithFeature extends MethodHook {
-        @Override
-        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            if (args != null) {
-                for (int i = 0; i < args.length; i++) {
-                    if (args[i] instanceof Integer && ((Integer) args[i]) == -1) {
-                        args[i] = 0; // Remap USER_ALL (-1) to host user (0)
-                    }
+        int getIntentIndex(Object[] args) {
+            for (int i = 0; i < args.length; i++) {
+                Object arg = args[i];
+                if (arg instanceof Intent) {
+                    return i;
                 }
             }
-            try {
-                return method.invoke(who, args);
-            } catch (Throwable t) {
-                Throwable cause = t instanceof java.lang.reflect.InvocationTargetException ? 
-                        ((java.lang.reflect.InvocationTargetException) t).getTargetException() : t;
-                if (cause instanceof SecurityException) {
-                    return 0;
-                }
-                throw cause;
-            }
+            return 1;
         }
     }
 
