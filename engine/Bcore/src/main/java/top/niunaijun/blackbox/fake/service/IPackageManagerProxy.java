@@ -381,7 +381,7 @@ public class IPackageManagerProxy extends BinderInvocationStub {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             int uid = (int) args[0];
-            String name = BlackBoxCore.getBPackageManager().getNameForUid(uid);
+            String name = BlackBoxCore.getPackageManager().getNameForUid(uid);
             if (name != null) {
                 return name;
             }

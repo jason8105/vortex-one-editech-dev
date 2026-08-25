@@ -806,18 +806,19 @@ public class IActivityManagerProxy extends ClassInvocationStub {
         @Override
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             MethodParameterUtils.replaceLastUid(args);
-            String permission = (String) args[0];
-            if (permission.equals("android.permission.READ_SAFETY_CENTER_STATUS")
-                    || permission.equals("android.permission.SEND_SAFETY_CENTER_UPDATE")
-                    || permission.equals(Manifest.permission.ACCOUNT_MANAGER)
-                    || permission.equals(Manifest.permission.SEND_SMS)
-                    || permission.equals("android.permission.CHANGE_CONFIGURATION")
-                    || permission.equals("android.permission.READ_APP_SPECIFIC_LOCALES")
+                        String permission = (String) args[0];
+            if (permission.equals(Manifest.permission.ACCOUNT_MANAGER)
+                    || permission.equals(Manifest.permission.GET_ACCOUNTS)
+                    || permission.equals(Manifest.permission.AUTHENTICATE_ACCOUNTS)
+                    || permission.equals(Manifest.permission.USE_CREDENTIALS)
+                    || permission.equals(Manifest.permission.MANAGE_ACCOUNTS)
+                    || permission.equals("android.permission.GET_ACCOUNTS_PRIVILEGED")
                     || permission.equals("android.permission.INTERACT_ACROSS_USERS")
                     || permission.equals("android.permission.INTERACT_ACROSS_USERS_FULL")
-                    || permission.equals("android.permission.DETECT_SCREEN_CAPTURE")) {
+                    || permission.equals(Manifest.permission.SEND_SMS)) {
                 return PackageManager.PERMISSION_GRANTED;
             }
+
             
             // Handle all audio-related permissions comprehensively
             if (isAudioPermission(permission)) {

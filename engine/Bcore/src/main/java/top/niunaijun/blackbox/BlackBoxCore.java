@@ -1722,11 +1722,7 @@ public class BlackBoxCore extends ClientConfiguration {
 
         if(!NativeCore.disableHiddenApi()){
             try {
-                if (android.os.Build.VERSION.SDK_INT < 34) {
-                    Reflection.unseal(context);
-                } else {
-                    org.lsposed.hiddenapibypass.HiddenApiBypass.addHiddenApiExemptions("");
-                }
+                Reflection.unseal(context);
             } catch (Throwable t) {
                 Slog.w(TAG, "HiddenApi unseal failed: " + t.getMessage());
             }

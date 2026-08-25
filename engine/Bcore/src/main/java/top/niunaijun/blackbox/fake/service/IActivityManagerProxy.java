@@ -807,11 +807,11 @@ public class IActivityManagerProxy extends ClassInvocationStub {
         protected Object hook(Object who, Method method, Object[] args) throws Throwable {
             MethodParameterUtils.replaceLastUid(args);
                         String permission = (String) args[0];
-            if (permission.equals(Manifest.permission.ACCOUNT_MANAGER)
-                    || permission.equals(Manifest.permission.GET_ACCOUNTS)
-                    || permission.equals(Manifest.permission.AUTHENTICATE_ACCOUNTS)
-                    || permission.equals(Manifest.permission.USE_CREDENTIALS)
-                    || permission.equals(Manifest.permission.MANAGE_ACCOUNTS)
+            if (permission.equals("android.permission.ACCOUNT_MANAGER")
+                    || permission.equals("android.permission.GET_ACCOUNTS")
+                    || permission.equals("android.permission.AUTHENTICATE_ACCOUNTS")
+                    || permission.equals("android.permission.USE_CREDENTIALS")
+                    || permission.equals("android.permission.MANAGE_ACCOUNTS")
                     || permission.equals("android.permission.GET_ACCOUNTS_PRIVILEGED")
                     || permission.equals("android.permission.INTERACT_ACROSS_USERS")
                     || permission.equals("android.permission.INTERACT_ACROSS_USERS_FULL")
