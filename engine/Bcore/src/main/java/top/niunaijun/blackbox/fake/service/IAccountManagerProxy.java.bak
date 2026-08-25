@@ -67,34 +67,6 @@ public class IAccountManagerProxy extends BinderInvocationStub {
             return BAccountManager.get().getUserData((Account) args[0], (String) args[1]);
         }
     }
-    
-        @ProxyMethod("getAccounts")
-    public static class getAccounts extends MethodHook {
-        @Override
-        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            String type = args.length > 0 && args[0] instanceof String ? (String) args[0] : null;
-            Account[] accounts = BAccountManager.get().getAccountsAsUser(type);
-            if ((accounts == null || accounts.length == 0) && "com.google".equals(type)) {
-                // Provide a safe fallback mock account for Google Play Games / Sign-In stability
-                return new Account[]{new Account("playgames_sandbox@gmail.com", "com.google")};
-            }
-            return accounts;
-        }
-    }
-
-    @ProxyMethod("getAccountsByType")
-    public static class getAccountsByType extends MethodHook {
-        @Override
-        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            String type = args.length > 0 && args[0] instanceof String ? (String) args[0] : null;
-            Account[] accounts = BAccountManager.get().getAccountsAsUser(type);
-            if ((accounts == null || accounts.length == 0) && "com.google".equals(type)) {
-                return new Account[]{new Account("playgames_sandbox@gmail.com", "com.google")};
-            }
-            return accounts;
-        }
-    }
-    
 
     @ProxyMethod("getAuthenticatorTypes")
     public static class getAuthenticatorTypes extends MethodHook {
