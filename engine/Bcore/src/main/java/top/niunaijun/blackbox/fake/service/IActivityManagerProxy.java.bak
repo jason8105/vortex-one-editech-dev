@@ -113,25 +113,43 @@ public class IActivityManagerProxy extends ClassInvocationStub {
         try {
             return super.invoke(proxy, method, args);
         } catch (SecurityException e) {
-            // Handle SecurityExceptions gracefully for all ActivityManager calls
             String methodName = method.getName();
-            Slog.w(TAG, "ActivityManager invoke: SecurityException in " + methodName + ", returning safe default", e);
+            Slog.w(TAG, "ActivityManager invoke: SecurityException in " + methodName, e);
             
-            // Return appropriate default values based on method
-            if (methodName.startsWith("set") || methodName.startsWith("update")) {
-                return null; // For setter methods, return null (success)
-            } else if (methodName.startsWith("get") || methodName.startsWith("query")) {
-                return null; // For getter methods, return null (empty result)
-            } else if (methodName.startsWith("start") || methodName.startsWith("bind")) {
-                return false; // For start/bind methods, return false (not started)
-            } else if (methodName.startsWith("stop") || methodName.startsWith("unbind")) {
-                return true; // For stop/unbind methods, return true (stopped)
-            } else {
-                return null; // Default fallback
+            Class<?> returnType = method.getReturnType();
+            if (returnType == int.class || returnType == Integer.class) {
+                return 0;
+            } else if (returnType == boolean.class || returnType == Boolean.class) {
+                return false;
+            } else if (returnType == long.class || returnType == Long.class) {
+                return 0L;
             }
+            return null;
         } catch (Exception e) {
             Slog.e(TAG, "ActivityManager invoke: Unexpected error in " + method.getName(), e);
-            return super.invoke(proxy, method, args);
+            Class<?> returnType = method.getReturnType();
+            if (returnType == int.class || returnType == Integer.class) {
+                return 0;
+            } else if (returnType == boolean.class || returnType == Boolean.class) {
+                return false;
+            }
+            return null;
+        }
+    }
+
+    @ProxyMethod("getUidProcessState")
+    public static class GetUidProcessState extends MethodHook {
+        @Override
+        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
+            return ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
+        }
+    }
+
+    @ProxyMethod("getUidImportance")
+    public static class GetUidImportance extends MethodHook {
+        @Override
+        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
+            return ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
         }
     }
 
@@ -798,7 +816,12 @@ public class IActivityManagerProxy extends ClassInvocationStub {
             MethodParameterUtils.replaceLastUid(args);
             String permission = (String) args[0];
             if (permission.equals(Manifest.permission.ACCOUNT_MANAGER)
-                    || permission.equals(Manifest.permission.SEND_SMS)) {
+                    || permission.equals(Manifest.permission.SEND_SMS)
+                    || permission.equals("android.permission.CHANGE_CONFIGURATION")
+                    || permission.equals("android.permission.READ_APP_SPECIFIC_LOCALES")
+                    || permission.equals("android.permission.INTERACT_ACROSS_USERS")
+                    || permission.equals("android.permission.INTERACT_ACROSS_USERS_FULL")
+                    || permission.equals("android.permission.DETECT_SCREEN_CAPTURE")) {
                 return PackageManager.PERMISSION_GRANTED;
             }
             

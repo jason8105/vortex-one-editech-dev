@@ -58,20 +58,4 @@ public class IActivityTaskManagerProxy extends BinderInvocationStub {
             return method.invoke(who, args);
         }
     }
-
-    @ProxyMethod("registerScreenCaptureObserver")
-    public static class RegisterScreenCaptureObserver extends MethodHook {
-        @Override
-        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            return null;
-        }
-    }
-
-    @ProxyMethod("unregisterScreenCaptureObserver")
-    public static class UnregisterScreenCaptureObserver extends MethodHook {
-        @Override
-        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            return null;
-        }
-    }
 }

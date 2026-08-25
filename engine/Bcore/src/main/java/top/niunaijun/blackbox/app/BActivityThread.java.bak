@@ -373,17 +373,6 @@ public class BActivityThread extends IBActivityThread.Stub {
         }
 
         PackageInfo packageInfo = BlackBoxCore.getBPackageManager().getPackageInfo(packageName, PackageManager.GET_PROVIDERS, BActivityThread.getUserId());
-        if (packageInfo == null || packageInfo.applicationInfo == null) {
-            Slog.w(TAG, "packageInfo is null for " + packageName + ", creating fallback package container");
-            packageInfo = new PackageInfo();
-            packageInfo.packageName = packageName;
-            packageInfo.applicationInfo = new ApplicationInfo();
-            packageInfo.applicationInfo.packageName = packageName;
-            packageInfo.applicationInfo.processName = processName;
-            packageInfo.applicationInfo.sourceDir = BlackBoxCore.getContext().getApplicationInfo().sourceDir;
-            packageInfo.applicationInfo.dataDir = BlackBoxCore.getContext().getApplicationInfo().dataDir;
-            packageInfo.providers = new ProviderInfo[]{};
-        }
         ApplicationInfo applicationInfo = packageInfo.applicationInfo;
         if (packageInfo.providers == null) {
             packageInfo.providers = new ProviderInfo[]{};

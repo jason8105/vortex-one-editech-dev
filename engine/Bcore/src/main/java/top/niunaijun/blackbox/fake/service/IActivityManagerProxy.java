@@ -604,13 +604,28 @@ public class IActivityManagerProxy extends ClassInvocationStub {
             try {
                 return method.invoke(who, args);
             } catch (Throwable t) {
-                Throwable cause = t instanceof java.lang.reflect.InvocationTargetException ? 
-                        ((java.lang.reflect.InvocationTargetException) t).getTargetException() : t;
-                if (cause instanceof SecurityException) {
-                    // Suppress remaining cross-user broadcast permission denials
-                    return 0;
+                Slog.w(TAG, "broadcastIntent intercepted exception: " + t.getMessage());
+                return 0;
+            }
+        }
+    }
+
+    @ProxyMethod("broadcastIntentWithFeature")
+    public static class BroadcastIntentWithFeature extends MethodHook {
+        @Override
+        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
+            if (args != null) {
+                for (int i = 0; i < args.length; i++) {
+                    if (args[i] instanceof Integer && ((Integer) args[i]) == -1) {
+                        args[i] = 0;
+                    }
                 }
-                throw cause;
+            }
+            try {
+                return method.invoke(who, args);
+            } catch (Throwable t) {
+                Slog.w(TAG, "broadcastIntentWithFeature intercepted exception: " + t.getMessage());
+                return 0;
             }
         }
     }
@@ -816,7 +831,12 @@ public class IActivityManagerProxy extends ClassInvocationStub {
             MethodParameterUtils.replaceLastUid(args);
             String permission = (String) args[0];
             if (permission.equals(Manifest.permission.ACCOUNT_MANAGER)
-                    || permission.equals(Manifest.permission.SEND_SMS)) {
+                    || permission.equals(Manifest.permission.SEND_SMS)
+                    || permission.equals("android.permission.CHANGE_CONFIGURATION")
+                    || permission.equals("android.permission.READ_APP_SPECIFIC_LOCALES")
+                    || permission.equals("android.permission.INTERACT_ACROSS_USERS")
+                    || permission.equals("android.permission.INTERACT_ACROSS_USERS_FULL")
+                    || permission.equals("android.permission.DETECT_SCREEN_CAPTURE")) {
                 return PackageManager.PERMISSION_GRANTED;
             }
             
