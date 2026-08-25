@@ -37,22 +37,36 @@ jobs:
       - name: Align and Stage 64-bit APK
         run: |
           mkdir -p output
-          
-          # Find the exact app module output
-          RAW_APK=$(find app/build/outputs/apk/debug -type f -name "*arm64-v8a*.apk" -o -name "*debug.apk" | head -n 1)
-          if [ -z "$RAW_APK" ]; then
-            echo "Error: No debug APK found in app/build/outputs/apk/debug!" && exit 1
-          fi
-          echo "Processing APK: $RAW_APK"
 
-          # Get latest Android build-tools path
+          # Search dynamically across build outputs for the arm64 or debug APK
+          RAW_APK=$(find . -type f -name "*.apk" ! -name "*unaligned*" ! -path "*/intermediates/*" | grep -E "arm64|debug|universal" | head -n 1)
+          
+          if [ -z "$RAW_APK" ]; then
+            echo "Searching fallback for any generated APK..."
+            RAW_APK=$(find . -type f -name "*.apk" ! -name "*unaligned*" ! -path "*/intermediates/*" | head -n 1)
+          fi
+
+          if [ -z "$RAW_APK" ]; then
+            echo "Error: No APK was produced by the build task!" && exit 1
+          fi
+
+          echo "Found APK to stage: $RAW_APK"
+
+          # Locate build-tools binaries
           BUILD_TOOLS_DIR=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -n 1)
           
-          # Ensure 16 KB page-alignment for Android 15
-          "$BUILD_TOOLS_DIR/zipalign" -p -f -v 16 "$RAW_APK" output/app-arm64-v8a-debug.apk
+          if [ -f "$BUILD_TOOLS_DIR/zipalign" ]; then
+            echo "Aligning APK with $BUILD_TOOLS_DIR/zipalign..."
+            "$BUILD_TOOLS_DIR/zipalign" -p -f -v 16 "$RAW_APK" output/app-arm64-v8a-debug.apk
+          else
+            echo "zipalign not found, copying directly..."
+            cp "$RAW_APK" output/app-arm64-v8a-debug.apk
+          fi
 
-          # Verify V2/V3 signatures
-          "$BUILD_TOOLS_DIR/apksigner" verify --verbose output/app-arm64-v8a-debug.apk || true
+          if [ -f "$BUILD_TOOLS_DIR/apksigner" ]; then
+            echo "Verifying APK signature..."
+            "$BUILD_TOOLS_DIR/apksigner" verify --verbose output/app-arm64-v8a-debug.apk || true
+          fi
 
       - name: Upload 64-bit Debug APK
         uses: actions/upload-artifact@v4

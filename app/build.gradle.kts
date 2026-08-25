@@ -19,7 +19,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
-        // Configuración de ABIs nativas para BlackBox
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a")
         }
@@ -40,7 +39,6 @@ android {
         }
     }
 
-    // Splits para optimizar tamaño de APK por arquitectura
     splits {
         abi {
             isEnable = true
@@ -53,10 +51,14 @@ android {
     buildTypes {
         debug {
             signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = true
         }
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
+            val releaseSigning = signingConfigs.findByName("release")
+            if (releaseSigning?.storeFile?.exists() == true) {
+                signingConfig = releaseSigning
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -71,7 +73,6 @@ android {
     
     kotlinOptions {
         jvmTarget = "1.8"
-        languageVersion = "1.9"
     }
     
     buildFeatures {
@@ -81,7 +82,11 @@ android {
     
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += setOf(
+                "/META-INF/{AL2.0,LGPL2.1}",
+                "/META-INF/INDEX.LIST",
+                "/META-INF/io.netty.versions.properties"
+            )
         }
         jniLibs {
             useLegacyPackaging = false
@@ -95,12 +100,12 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
     
-    // Android TV Leanback
+    // Android TV & UI
     implementation("androidx.leanback:leanback:1.0.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("com.google.android.material:material:1.11.0")
     
-    // Virtualization Engine (based on BlackBox - Apache 2.0, see NOTICE)
+    // Virtualization Engine (BlackBox)
     implementation(project(":engine:Bcore"))
     
     // Lifecycle
@@ -115,12 +120,12 @@ dependencies {
     implementation("com.unity3d.ads:unity-ads:4.12.0")
 
     // Room Database
-    val room_version = "2.6.1"
-    implementation("androidx.room:room-runtime:$room_version")
-    implementation("androidx.room:room-ktx:$room_version")
-    annotationProcessor("androidx.room:room-compiler:$room_version")
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    annotationProcessor("androidx.room:room-compiler:$roomVersion")
 
-    // Tor embebido (Guardian Project — Apache 2.0)
+    // Tor Embedded (Guardian Project)
     implementation("info.guardianproject:tor-android:0.4.9.11")
     implementation("info.guardianproject:jtorctl:0.4.5.7")
 }
