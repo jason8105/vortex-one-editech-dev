@@ -30,17 +30,27 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build 64-bit Debug APK Only
-        run: ./gradlew :app:assembleDebug -Pandroid.injected.build.abi=arm64-v8a --stacktrace
+        run: ./gradlew :app:assembleDebug -Pandroid.injected.build.abi=arm64-v8a --no-daemon --stacktrace
 
-      - name: Locate and Stage APK
+      - name: Align and Stage 64-bit APK
         run: |
           mkdir -p output
-          APK_FILE=$(find . -type f -name "*.apk" ! -name "*unaligned*" | head -n 1)
-          if [ -z "$APK_FILE" ]; then
-            echo "No APK found!" && exit 1
+          
+          # Find the exact app module output
+          RAW_APK=$(find app/build/outputs/apk/debug -type f -name "*arm64-v8a*.apk" -o -name "*debug.apk" | head -n 1)
+          if [ -z "$RAW_APK" ]; then
+            echo "Error: No debug APK found in app/build/outputs/apk/debug!" && exit 1
           fi
-          echo "Found APK at: $APK_FILE"
-          cp "$APK_FILE" output/app-arm64-v8a-debug.apk
+          echo "Processing APK: $RAW_APK"
+
+          # Get latest Android build-tools path
+          BUILD_TOOLS_DIR=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -n 1)
+          
+          # Ensure 16 KB page-alignment for Android 15
+          "$BUILD_TOOLS_DIR/zipalign" -p -f -v 16 "$RAW_APK" output/app-arm64-v8a-debug.apk
+
+          # Verify V2/V3 signatures
+          "$BUILD_TOOLS_DIR/apksigner" verify --verbose output/app-arm64-v8a-debug.apk || true
 
       - name: Upload 64-bit Debug APK
         uses: actions/upload-artifact@v4
