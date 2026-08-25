@@ -8,7 +8,7 @@ import java.io.FileInputStream
 
 android {
     namespace = "com.editech.services"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.editech.services"
