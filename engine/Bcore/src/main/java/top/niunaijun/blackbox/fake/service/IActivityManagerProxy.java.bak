@@ -617,7 +617,7 @@ public class IActivityManagerProxy extends ClassInvocationStub {
             if (args != null) {
                 for (int i = 0; i < args.length; i++) {
                     if (args[i] instanceof Integer && ((Integer) args[i]) == -1) {
-                        args[i] = 0;
+                        args[i] = 0; // Remap USER_ALL (-1) to host user (0)
                     }
                 }
             }
@@ -630,29 +630,6 @@ public class IActivityManagerProxy extends ClassInvocationStub {
         }
     }
 
-    @ProxyMethod("broadcastIntentWithFeature")
-    public static class BroadcastIntentWithFeature extends MethodHook {
-        @Override
-        protected Object hook(Object who, Method method, Object[] args) throws Throwable {
-            if (args != null) {
-                for (int i = 0; i < args.length; i++) {
-                    if (args[i] instanceof Integer && ((Integer) args[i]) == -1) {
-                        args[i] = 0; // Remap USER_ALL (-1) to host user (0)
-                    }
-                }
-            }
-            try {
-                return method.invoke(who, args);
-            } catch (Throwable t) {
-                Throwable cause = t instanceof java.lang.reflect.InvocationTargetException ? 
-                        ((java.lang.reflect.InvocationTargetException) t).getTargetException() : t;
-                if (cause instanceof SecurityException) {
-                    return 0;
-                }
-                throw cause;
-            }
-        }
-    }
 
     @ProxyMethod("unregisterReceiver")
     public static class unregisterReceiver extends MethodHook {

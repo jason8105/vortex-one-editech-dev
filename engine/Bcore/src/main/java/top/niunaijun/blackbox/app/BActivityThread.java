@@ -394,6 +394,20 @@ public class BActivityThread extends IBActivityThread.Stub {
 
         Context packageContext = createPackageContext(applicationInfo);
         Object loadedApk = BRContextImpl.get(packageContext).mPackageInfo();
+        
+        // Inject legacy Apache HTTP library into classloader for YouTube / Legacy apps
+        try {
+            ClassLoader appClassLoader = BRLoadedApk.get(loadedApk).getClassLoader();
+            if (appClassLoader instanceof dalvik.system.BaseDexClassLoader) {
+                File orgApacheHttp = new File("/system/framework/org.apache.http.legacy.jar");
+                if (orgApacheHttp.exists()) {
+                    top.niunaijun.blackbox.utils.Reflector.on(appClassLoader)
+                            .method("addDexPath", String.class)
+                            .call(orgApacheHttp.getAbsolutePath());
+                }
+            }
+        } catch (Throwable ignored) {
+        }
         BRLoadedApk.get(loadedApk)._set_mSecurityViolation(false);
         // fix applicationInfo
         BRLoadedApk.get(loadedApk)._set_mApplicationInfo(applicationInfo);
@@ -409,9 +423,12 @@ public class BActivityThread extends IBActivityThread.Stub {
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-    String processSuffix = processName.replace(":", "_");
-    WebView.setDataDirectorySuffix(getUserId() + "_" + packageName + "_" + processSuffix);
-}
+            String safeProcessName = processName == null ? "main" : processName.replace(":", "_");
+            try {
+                WebView.setDataDirectorySuffix(getUserId() + "_" + packageName + "_" + safeProcessName + "_" + android.os.Process.myPid());
+            } catch (Throwable ignored) {
+            }
+        }
 
 
         VirtualRuntime.setupRuntime(processName, applicationInfo);
