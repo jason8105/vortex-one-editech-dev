@@ -401,9 +401,10 @@ public class BActivityThread extends IBActivityThread.Stub {
             if (appClassLoader instanceof dalvik.system.BaseDexClassLoader) {
                 File orgApacheHttp = new File("/system/framework/org.apache.http.legacy.jar");
                 if (orgApacheHttp.exists()) {
-                    top.niunaijun.blackbox.utils.Reflector.on(appClassLoader)
-                            .method("addDexPath", String.class)
-                            .call(orgApacheHttp.getAbsolutePath());
+                    java.lang.reflect.Method addDexPath = dalvik.system.BaseDexClassLoader.class
+                            .getDeclaredMethod("addDexPath", String.class);
+                    addDexPath.setAccessible(true);
+                    addDexPath.invoke(appClassLoader, orgApacheHttp.getAbsolutePath());
                 }
             }
         } catch (Throwable ignored) {

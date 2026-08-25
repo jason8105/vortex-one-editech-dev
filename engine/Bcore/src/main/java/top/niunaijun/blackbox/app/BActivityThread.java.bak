@@ -394,6 +394,20 @@ public class BActivityThread extends IBActivityThread.Stub {
 
         Context packageContext = createPackageContext(applicationInfo);
         Object loadedApk = BRContextImpl.get(packageContext).mPackageInfo();
+        
+        // Inject legacy Apache HTTP library into classloader for YouTube / Legacy apps
+        try {
+            ClassLoader appClassLoader = BRLoadedApk.get(loadedApk).getClassLoader();
+            if (appClassLoader instanceof dalvik.system.BaseDexClassLoader) {
+                File orgApacheHttp = new File("/system/framework/org.apache.http.legacy.jar");
+                if (orgApacheHttp.exists()) {
+                    top.niunaijun.blackbox.utils.Reflector.on(appClassLoader)
+                            .method("addDexPath", String.class)
+                            .call(orgApacheHttp.getAbsolutePath());
+                }
+            }
+        } catch (Throwable ignored) {
+        }
         BRLoadedApk.get(loadedApk)._set_mSecurityViolation(false);
         // fix applicationInfo
         BRLoadedApk.get(loadedApk)._set_mApplicationInfo(applicationInfo);
