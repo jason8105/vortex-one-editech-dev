@@ -65,43 +65,42 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun handleGoogleSignIn() {
-        val isGmsInstalled = try {
+        val isInstalled = try {
             BlackBoxCore.get().isInstalled("com.google.android.gms", USER_ID)
         } catch (e: Exception) {
             false
         }
 
-        if (!isGmsInstalled) {
-            Toast.makeText(this, "Please install Google Play Services first", Toast.LENGTH_SHORT).show()
+        if (isInstalled == false) {
+            Toast.makeText(this, "Please install GMS / microG first", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val intentsToTry = listOf(
-            android.content.Intent().apply {
-                component = android.content.ComponentName("com.google.android.play.games", "com.google.android.apps.play.games.features.main.MainActivity")
-                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-            },
-            android.content.Intent().apply {
-                component = android.content.ComponentName("com.google.android.gms", "com.google.android.gms.auth.uiflows.minutemaid.MinuteMaidActivity")
-                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-            },
-            android.content.Intent().apply {
-                component = android.content.ComponentName("com.android.vending", "com.android.vending.AssetBrowserActivity")
+        try {
+            // Attempt 1: microG Login Activity
+            val microGIntent = android.content.Intent().apply {
+                component = android.content.ComponentName(
+                    "com.google.android.gms",
+                    "org.microg.gms.auth.login.LoginActivity"
+                )
                 flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
             }
-        )
-
-        for (intent in intentsToTry) {
-            try {
-                BlackBoxCore.get().startActivity(intent, USER_ID)
-                return
-            } catch (ignored: Exception) {}
-        }
-
-        try {
-            BlackBoxCore.get().launchApk("com.google.android.gms", USER_ID)
+            BlackBoxCore.get().startActivity(microGIntent, USER_ID)
         } catch (e: Exception) {
-            Toast.makeText(this, "Login error: ${e.message}", Toast.LENGTH_SHORT).show()
+            try {
+                // Attempt 2: Official GMS Add Account Activity
+                val gmsIntent = android.content.Intent().apply {
+                    component = android.content.ComponentName(
+                        "com.google.android.gms",
+                        "com.google.android.gms.auth.uiflows.AddAccountActivity"
+                    )
+                    flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                BlackBoxCore.get().startActivity(gmsIntent, USER_ID)
+            } catch (e2: Exception) {
+                // Attempt 3: General Play Services Settings entry
+                BlackBoxCore.get().launchApk("com.google.android.gms", USER_ID)
+            }
         }
     }
 

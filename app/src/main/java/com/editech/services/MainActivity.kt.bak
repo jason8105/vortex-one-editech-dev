@@ -117,8 +117,53 @@ class MainActivity : AppCompatActivity() {
             openSettingsActivity()
         }
 
-        binding.btnLanguage.setOnClickListener {
+binding.btnLanguage.setOnClickListener {
             showLanguagePicker()
+        }
+
+        binding.btnGoogleSignInHome.setOnClickListener {
+            handleGoogleSignIn()
+        }
+    }
+
+    private fun handleGoogleSignIn() {
+        val isGmsInstalled = try {
+            BlackBoxCore.get().isInstalled("com.google.android.gms", USER_ID)
+        } catch (e: Exception) {
+            false
+        }
+
+        if (!isGmsInstalled) {
+            android.widget.Toast.makeText(this, "Please install Google Play Services in Settings first", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val intentsToTry = listOf(
+            android.content.Intent().apply {
+                component = android.content.ComponentName("com.google.android.play.games", "com.google.android.apps.play.games.features.main.MainActivity")
+                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+            },
+            android.content.Intent().apply {
+                component = android.content.ComponentName("com.google.android.gms", "com.google.android.gms.auth.uiflows.minutemaid.MinuteMaidActivity")
+                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+            },
+            android.content.Intent().apply {
+                component = android.content.ComponentName("com.android.vending", "com.android.vending.AssetBrowserActivity")
+                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+        )
+
+        for (intent in intentsToTry) {
+            try {
+                BlackBoxCore.get().startActivity(intent, USER_ID)
+                return
+            } catch (ignored: Exception) {}
+        }
+
+        try {
+            BlackBoxCore.get().launchApk("com.google.android.gms", USER_ID)
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(this, "Login error: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -117,49 +117,53 @@ class MainActivity : AppCompatActivity() {
             openSettingsActivity()
         }
 
-        binding.btnLanguage.setOnClickListener {
+binding.btnLanguage.setOnClickListener {
             showLanguagePicker()
         }
 
-        binding.btnGoogleSignIn.setOnClickListener {
+        binding.btnGoogleSignInHome.setOnClickListener {
             handleGoogleSignIn()
         }
     }
 
     private fun handleGoogleSignIn() {
-        val isInstalled = try {
+        val isGmsInstalled = try {
             BlackBoxCore.get().isInstalled("com.google.android.gms", USER_ID)
         } catch (e: Exception) {
             false
         }
 
-        if (isInstalled == false) {
-            Toast.makeText(this, "Please install GMS / microG first in Settings", Toast.LENGTH_SHORT).show()
+        if (!isGmsInstalled) {
+            android.widget.Toast.makeText(this, "Please install Google Play Services in Settings first", android.widget.Toast.LENGTH_SHORT).show()
             return
         }
 
-        try {
-            val microGIntent = android.content.Intent().apply {
-                component = android.content.ComponentName(
-                    "com.google.android.gms",
-                    "org.microg.gms.auth.login.LoginActivity"
-                )
+        val intentsToTry = listOf(
+            android.content.Intent().apply {
+                component = android.content.ComponentName("com.google.android.play.games", "com.google.android.apps.play.games.features.main.MainActivity")
+                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+            },
+            android.content.Intent().apply {
+                component = android.content.ComponentName("com.google.android.gms", "com.google.android.gms.auth.uiflows.minutemaid.MinuteMaidActivity")
+                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+            },
+            android.content.Intent().apply {
+                component = android.content.ComponentName("com.android.vending", "com.android.vending.AssetBrowserActivity")
                 flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
             }
-            BlackBoxCore.get().startActivity(microGIntent, USER_ID)
-        } catch (e: Exception) {
+        )
+
+        for (intent in intentsToTry) {
             try {
-                val gmsIntent = android.content.Intent().apply {
-                    component = android.content.ComponentName(
-                        "com.google.android.gms",
-                        "com.google.android.gms.auth.uiflows.AddAccountActivity"
-                    )
-                    flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                BlackBoxCore.get().startActivity(gmsIntent, USER_ID)
-            } catch (e2: Exception) {
-                BlackBoxCore.get().launchApk("com.google.android.gms", USER_ID)
-            }
+                BlackBoxCore.get().startActivity(intent, USER_ID)
+                return
+            } catch (ignored: Exception) {}
+        }
+
+        try {
+            BlackBoxCore.get().launchApk("com.google.android.gms", USER_ID)
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(this, "Login error: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -320,8 +324,8 @@ class MainActivity : AppCompatActivity() {
                 val apps = mutableListOf<VirtualApp>()
                 
                 installedApps?.forEach { appInfo ->
-                    // Ocultar servicios y paquetes de infraestructura de Google del launcher principal
-                    if (top.niunaijun.blackbox.core.GmsCore.isGoogleAppOrService(appInfo.packageName)) {
+                    // Hide background service daemons, but allow Play Store and Play Games to show on dashboard
+                    if (top.niunaijun.blackbox.core.GmsCore.isGoogleService(appInfo.packageName)) {
                         return@forEach
                     }
 

@@ -7,6 +7,9 @@ import top.niunaijun.blackbox.BlackBoxCore;
 import top.niunaijun.blackbox.fake.hook.ClassInvocationStub;
 import top.niunaijun.blackbox.utils.Slog;
 
+/**
+ * Clean passthrough for Google Account Manager to allow real microG/GMS authentication.
+ */
 public class GoogleAccountManagerProxy extends ClassInvocationStub {
     public static final String TAG = "GoogleAccountManagerProxy";
 

@@ -160,7 +160,7 @@
                 android:nextFocusRight="@id/btnSettings"
                 android:nextFocusDown="@id/etSearch" />
 
-            <!-- Botón Ajustes -->
+<!-- Botón Ajustes -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSettings"
                 android:layout_width="wrap_content"
@@ -184,12 +184,12 @@
                 app:iconPadding="6dp"
                 app:iconTint="#94A3B8"
                 android:nextFocusLeft="@id/btnFirewall"
-                android:nextFocusRight="@id/btnGoogleSignIn"
+                android:nextFocusRight="@id/btnGoogleSignInHome"
                 android:nextFocusDown="@id/etSearch" />
 
-            <!-- Botón Google Sign-In -->
+            <!-- Botón Google Sign-In en Home -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnGoogleSignIn"
+                android:id="@+id/btnGoogleSignInHome"
                 android:layout_width="wrap_content"
                 android:layout_height="38dp"
                 android:layout_marginStart="8dp"
