@@ -1,22 +1,18 @@
-name: Build 64-bit APK
+name: Build Android APK
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  build-64bit:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -24,54 +20,42 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
-
-      - name: Accept Android SDK licenses
-        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          cache: 'gradle'
 
       - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+        run: chmod +x gradlew
 
-      - name: Build 64-bit Debug APK
-        run: ./gradlew :app:assembleDebug -Pandroid.injected.build.abi=arm64-v8a --no-daemon --stacktrace
+      - name: Build APK
+        run: ./gradlew assembleRelease --no-daemon
 
-      - name: Stage APK Output
+      - name: Locate APKs recursively
+        id: find_apk
         run: |
-          mkdir -p output
+          echo "Scanning workspace for APKs..."
           
-          # Target the generated arm64 debug APK from build outputs
-          APK_PATH=$(find app/build/outputs/apk/debug -type f -name "*arm64-v8a*.apk" ! -name "*unaligned*" | head -n 1)
-          
-          # Fallback if splits naming varies
-          if [ -z "$APK_PATH" ]; then
-            APK_PATH=$(find app/build/outputs/apk -type f -name "*.apk" ! -name "*unaligned*" | grep -E "arm64|debug" | head -n 1)
-          fi
+          # Recursive search excluding Gradle intermediates and cache
+          APKS=$(find "$GITHUB_WORKSPACE" -type f -name "*.apk" ! -path "*/intermediates/*")
 
-          if [ -z "$APK_PATH" ]; then
-            echo "Error: No matching APK found in build outputs!"
+          if [ -z "$APKS" ]; then
+            echo "::error::No APK files found anywhere in the workspace."
             exit 1
           fi
 
-          echo "Found APK: $APK_PATH"
-          cp "$APK_PATH" output/app-arm64-v8a-debug.apk
+          echo "Found APKs:"
+          echo "$APKS"
 
-      - name: Verify APK with apksigner
-        run: |
-          BUILD_TOOLS_DIR=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -n 1)
-          if [ -f "$BUILD_TOOLS_DIR/apksigner" ]; then
-            "$BUILD_TOOLS_DIR/apksigner" verify --verbose output/app-arm64-v8a-debug.apk || true
-          fi
+          # Pick the primary/first APK found and export to GITHUB_OUTPUT
+          PRIMARY_APK=$(echo "$APKS" | head -n 1)
+          echo "apk_path=$PRIMARY_APK" >> "$GITHUB_OUTPUT"
 
-      - name: Upload 64-bit Debug APK
+          # Stage all matching APKs to a dedicated directory for clean artifact export
+          mkdir -p staging_apks
+          find "$GITHUB_WORKSPACE" -type f -name "*.apk" ! -path "*/intermediates/*" -exec cp {} staging_apks/ \;
+
+      - name: Upload APKs as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-arm64-v8a-debug
-          path: output/app-arm64-v8a-debug.apk
+          name: app-release-apks
+          path: staging_apks/*.apk
+          retention-days: 14
           if-no-files-found: error
